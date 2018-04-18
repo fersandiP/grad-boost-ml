@@ -37,6 +37,8 @@ def main():
 	# print(temp.head())
 	# temp.sort_values(by=[''], ascending = False)
 
+	temp.to_csv('dataset_diabetes/pre_processed.csv', encoding='UTF8')
+
 	# automobile = automobile[automobile != '?'].dropna()
 	# automobile = automobile.apply(pd.to_numeric, errors='ignore')
 	# sns.set_style('whitegrid')
