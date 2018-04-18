@@ -31,9 +31,9 @@ def main():
 			sd = np.std(elements, axis=0)
 			final_list = [x for x in clean_df if (x > mean - 2 * sd)]
 			final_list = [x for x in final_list if (x < mean + 2 * sd)]
-			temp["{}".format(column), column] = pd.Series(final_list)
+			temp[column] = pd.Series(final_list)
 		else:
-			temp["{}".format(column), column] = pd.Series(elements)
+			temp[column] = pd.Series(elements)
 	# print(temp.head())
 	# temp.sort_values(by=[''], ascending = False)
 
