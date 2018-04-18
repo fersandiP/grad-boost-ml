@@ -37,7 +37,7 @@ def main():
 	# print(temp.head())
 	# temp.sort_values(by=[''], ascending = False)
 
-	temp.to_csv('dataset_diabetes/pre_processed.csv', encoding='UTF8')
+	temp.to_csv('dataset_diabetes/pre_processed.csv', encoding='UTF8', index=False)
 
 	# automobile = automobile[automobile != '?'].dropna()
 	# automobile = automobile.apply(pd.to_numeric, errors='ignore')
