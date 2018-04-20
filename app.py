@@ -10,7 +10,7 @@ from sklearn.ensemble import GradientBoostingClassifier, GradientBoostingRegress
 
 def main():
 	temp = lambda col: col not in ['payer_code']
-	diabet = pd.read_csv('dataset_diabetes/diabetic_data.csv', na_values='?', usecols=temp)
+	diabet = pd.read_csv('dataset/diabetic_data.csv', na_values='?', usecols=temp)
 	# print(diabet.isnull().sum())
 	# print(diabet.dtypes)
 	fill = {}
@@ -37,7 +37,7 @@ def main():
 	# print(temp.head())
 	# temp.sort_values(by=[''], ascending = False)
 
-	temp.to_csv('dataset_diabetes/pre_processed.csv', encoding='UTF8', index=False)
+	# temp.to_csv('dataset/pre_processed.csv', encoding='UTF8', index=False)
 
 	# automobile = automobile[automobile != '?'].dropna()
 	# automobile = automobile.apply(pd.to_numeric, errors='ignore')

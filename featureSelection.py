@@ -4,7 +4,7 @@ from pandas import read_csv
 from sklearn.decomposition import PCA
 # load data
 temp = lambda col: col  in ['admission_type_id', 'discharge_disposition_id', 'admission_source_id', 'diabetesMed']
-diabet = pd.read_csv('dataset_diabetes/pre_processed.csv',usecols=temp)
+diabet = pd.read_csv('dataset/pre_processed.csv',usecols=temp)
 arrayDiabet = diabet.values
 array = diabet.values
 X = array[:,0:3]
