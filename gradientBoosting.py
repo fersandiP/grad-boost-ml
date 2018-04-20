@@ -1,9 +1,6 @@
 
-
-columnNames = ['HouseVal','MedInc','HouseAge','AveRooms','AveBedrms','Population','AveOccup','Latitude','Longitud']
-
-df = pd.read_csv('cadata.txt',skiprows=27, sep='\s+',names=columnNames)
-
+temp = lambda col: col  in ['admission_type_id', 'discharge_disposition_id', 'admission_source_id', 'diabetesMed']
+df = pd.read_csv('dataset/pre_processed.csv',usecols=temp)
 
 xi = x # initialization of input
 yi = y # initialization of target

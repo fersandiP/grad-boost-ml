@@ -2,10 +2,11 @@ import pandas as pd
 import numpy as np
 # import matplotlib.pyplot as plt
 # import seaborn as sns
+from io import StringIO as sio
 # from scipy import stats
 # from sklearn import metrics
 # from sklearn.cross_validation import train_test_split
-from sklearn.ensemble import GradientBoostingClassifier, GradientBoostingRegressor
+# from sklearn.ensemble import GradientBoostingClassifier, GradientBoostingRegressor
 # from sklearn.metrics import accuracy_score
 
 def main():
@@ -20,8 +21,19 @@ def main():
 		else:
 			temp = diabet[column].mode()
 			fill[column] = temp[0]
-	diabet = diabet.fillna(value=fill)
+	# diabet = diabet.fillna(value=fill)
 	# print(diabet.isnull().sum())
+	for column in diabet:
+		if diabet[column].dtypes != 'int64':
+			try:
+				float(diabet[column][0])
+				# diabet[column] = diabet[column].apply(lambda x: x.isnumeric())
+				diabet[column] = diabet[column].apply(pd.to_numeric, errors='coerce')
+			except ValueError:
+				continue
+	# print(diabet['diag_1'])
+	# print(diabet['diag_2'])
+	# print(diabet.dtypes)
 	temp = pd.DataFrame()
 	for column in diabet:
 		clean_df = diabet[column]
@@ -34,6 +46,8 @@ def main():
 			temp[column] = pd.Series(final_list)
 		else:
 			temp[column] = pd.Series(elements)
+	temp = temp.fillna(value=fill)
+	# print(temp.isnull().sum())
 	# print(temp.head())
 	# temp.sort_values(by=[''], ascending = False)
 

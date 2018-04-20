@@ -21,8 +21,8 @@ print("------------------------------------------")
 from sklearn.feature_selection import RFE
 from sklearn.linear_model import LogisticRegression
 # load data
-X = array[:,0:4]
-Y = array[:,4]
+X = array[:,0:3]
+Y = array[:,3]
 # feature extraction
 model = LogisticRegression()
 rfe = RFE(model, 2)
@@ -36,8 +36,8 @@ print("-----------------------------------------")
 from pandas import read_csv
 from sklearn.ensemble import ExtraTreesClassifier
 # load data
-X = array[:,0:4]
-Y = array[:,4]
+X = array[:,0:3]
+Y = array[:,3]
 # feature extraction
 model = ExtraTreesClassifier()
 model.fit(X, Y)
