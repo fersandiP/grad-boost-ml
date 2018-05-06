@@ -2,12 +2,15 @@ import pandas as pd
 import numpy as np
 # import matplotlib.pyplot as plt
 # import seaborn as sns
-from io import StringIO as sio
+import featureSelection, decisionTree, gradientBoosting
+# from io import StringIO as sio
 # from scipy import stats
 # from sklearn import metrics
 # from sklearn.cross_validation import train_test_split
+from sklearn.decomposition import PCA
 # from sklearn.ensemble import GradientBoostingClassifier, GradientBoostingRegressor
 # from sklearn.metrics import accuracy_score
+pd.options.mode.chained_assignment = None  # default='warn'
 
 def main():
 	temp = lambda col: col not in ['payer_code']
@@ -52,6 +55,48 @@ def main():
 	# temp.sort_values(by=[''], ascending = False)
 
 	# temp.to_csv('dataset/pre_processed.csv', encoding='UTF8', index=False)
+
+	temp = lambda col: col not in ['payer_code']
+	df = pd.read_csv('dataset/pre_processed.csv', na_values='?', usecols=temp)
+	y = df['diabetesMed'].map({'No' : 0, 'Yes' : 1})
+	# print(df)
+
+	clean_df = featureSelection.feature_engineering(df)
+	# print(clean_df)
+
+	pca = PCA(15)
+	pca_arr = pca.fit_transform(clean_df)
+	pca_df = pd.DataFrame(data = pca_arr)
+	# print(pca_df)
+
+	# clean_df['label'] = y
+	# clean_df.to_csv("dataset/clean.csv", index_label=False)
+	# pca_df['label'] = y
+	# clean_df.to_csv("dataset/clean_pca.csv", index_label=False)
+
+	df_clean = pd.read_csv("dataset/clean.csv")
+	df_clean = df_clean[:10000]
+	y = df_clean["label"]
+	del df_clean["label"]
+	# print(df_clean)
+
+	model = gradientBoosting.GradientBoosting(10, 0.1, max_depth_tree=4)
+	model.fit(df_clean, y)
+
+	for dt in model.models:
+		print(dt.root)
+
+	a = model.predict(df_clean)
+	print(a)
+
+	dt = decisionTree.DecisionTree(5,100)
+	dt.fit(df_clean, y)
+
+	b = dt.predict(df_clean)
+	# print(dt.root)
+
+	# print(np.sum(b == y))
+	# print(np.sum(b_l == y))
 
 	# automobile = automobile[automobile != '?'].dropna()
 	# automobile = automobile.apply(pd.to_numeric, errors='ignore')

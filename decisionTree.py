@@ -1,70 +1,134 @@
-import pandas as pd
 import numpy as np
-from fastai.imports import *
-from IPython.display import display
-from sklearn import metrics
 
-
-def std_agg(cnt, s1, s2): return math.sqrt((s2/cnt) - (s1/cnt)**2)
-
-class DecisionTree():
-    def __init__(self, x, y, idxs = None, min_leaf=2):
-        if idxs is None: idxs=np.arange(len(y))
-        self.x,self.y,self.idxs,self.min_leaf = x,y,idxs,min_leaf
-        self.n,self.c = len(idxs), x.shape[1]
-        self.val = np.mean(y[idxs])
-        self.score = float('inf')
-        self.find_varsplit()
+class DecisionTree:
+    def __init__(self, max_depth=2, min_size=None, func='gini'):
+        self.max_depth = max_depth
+        self.min_size = min_size
+        self.root = None
+        self.func = func
         
-    def find_varsplit(self):
-        for i in range(self.c): self.find_better_split(i)
-        if self.score == float('inf'): return
-        x = self.split_col
-        lhs = np.nonzero(x<=self.split)[0]
-        rhs = np.nonzero(x>self.split)[0]
-        self.lhs = DecisionTree(self.x, self.y, self.idxs[lhs])
-        self.rhs = DecisionTree(self.x, self.y, self.idxs[rhs])
+    def fit(self, dataset, label):
+        new_dataset = dataset.copy()
+        new_dataset['label'] = label
+        
+        self.dataset = new_dataset.as_matrix()
+        self.label = list(set(label))
+        
+        if self.min_size is None:
+            self.min_size = len(self.dataset)/10
+            
+        self.root = self._split_tree(self.dataset)
+        self._split(self.root, 1)
+    
+    def predict(self, dataset):
+        if self.root is None:
+            raise "Decison Tree belum di fit"
+            
+        rows = dataset.as_matrix()
+        
+        return np.asarray([self._predict(self.root, row) for row in rows])
+            
+                
+    def _predict(self, node, row):
+        if row[node['index']] < node['value']:
+            if isinstance(node['left'], dict):
+                return self._predict(node['left'], row)
+            else:
+                return node['left']
+        else:
+            if isinstance(node['right'], dict):
+                return self._predict(node['right'], row)
+            else:
+                return node['right']
 
-    def find_better_split(self, var_idx):
-        x,y = self.x.values[self.idxs,var_idx], self.y[self.idxs]
-        sort_idx = np.argsort(x)
-        sort_y,sort_x = y[sort_idx], x[sort_idx]
-        rhs_cnt,rhs_sum,rhs_sum2 = self.n, sort_y.sum(), (sort_y**2).sum()
-        lhs_cnt,lhs_sum,lhs_sum2 = 0,0.,0.
-
-        for i in range(0,self.n-self.min_leaf-1):
-            xi,yi = sort_x[i],sort_y[i]
-            lhs_cnt += 1; rhs_cnt -= 1
-            lhs_sum += yi; rhs_sum -= yi
-            lhs_sum2 += yi**2; rhs_sum2 -= yi**2
-            if i<self.min_leaf or xi==sort_x[i+1]:
+    def evaluate(self, test_data):
+        pass
+    
+    def _calculate_gini_index(self, groups):
+        instances = sum(len(group) for group in groups)
+        gini = 0.0
+        for group in groups:
+            size = len(group)
+            if size == 0:
                 continue
-
-            lhs_std = std_agg(lhs_cnt, lhs_sum, lhs_sum2)
-            rhs_std = std_agg(rhs_cnt, rhs_sum, rhs_sum2)
-            curr_score = lhs_std*lhs_cnt + rhs_std*rhs_cnt
-            if curr_score<self.score: 
-                self.var_idx,self.score,self.split = var_idx,curr_score,xi
-
-    @property
-    def split_name(self): return self.x.columns[self.var_idx]
+            score = 0.0
+            for class_val in self.label:
+                p = [row[-1] for row in group].count(class_val) / size
+                score += p * p
+            gini += (1.0 - score) * (size / instances)
+        return gini
     
-    @property
-    def split_col(self): return self.x.values[self.idxs,self.var_idx]
-
-    @property
-    def is_leaf(self): return self.score == float('inf')
+    def _calculate_sse_func(self, groups):
+        sse = 0.0
+        for group in groups:
+            if len(group) == 0:
+                continue
+            y_mean = sum(row[-1] for row in group)/len(group)
+            sse += sum((row[-1] - y_mean)**2 for row in group)
+        return sse
     
-    def __repr__(self):
-        s = f'n: {self.n}; val:{self.val}'
-        if not self.is_leaf:
-            s += f'; score:{self.score}; split:{self.split}; var:{self.split_name}'
-        return s
+    def _calculate_cost(self, groups):
+        if self.func == 'gini':
+            return self._calculate_gini_index(groups)
+        elif self.func == 'sse':
+            return self._calculate_sse_func(groups)
+        raise 'Unknown function'
+    
+    def _split_tree(self, dataset):
+        b_index, b_value, b_score, b_groups = 999, 999, None, None
+        for index in range(len(dataset[0])-1):
 
-    def predict(self, x):
-        return np.array([self.predict_row(xi) for xi in x])
+            col_data = set([data[index] for data in dataset])
+                
+            for col in col_data:
+                groups = self._test_split(index, col, dataset)
+                cost = self._calculate_cost(groups)
+                if b_score is None or cost < b_score:
+                    b_index, b_value, b_score, b_groups = index, col, cost, groups
+        return {'index':b_index, 'value':b_value, 'groups':b_groups}
+    
+    def _test_split(self, index, value, dataset):
+        left, right = list(), list()
+        for row in dataset:
+            if row[index] < value:
+                left.append(row)
+            else:
+                right.append(row)
+        return left, right
 
-    def predict_row(self, xi):
-        if self.is_leaf: return self.val
-        t = self.lhs if xi[self.var_idx]<=self.split else self.rhs
-        return t.predict_row(xi)
+    def _split(self, node, depth):
+        left, right = node['groups']
+        del(node['groups'])
+        # check for a no split
+        if not left or not right:
+            node['left'] = node['right'] = self._to_terminal(left + right)
+            return
+        # check for max depth
+        if depth >= self.max_depth:
+            node['left'], node['right'] = self._to_terminal(left), self._to_terminal(right)
+            return
+        # process left child
+        if len(left) <= self.min_size:
+            node['left'] = self._to_terminal(left)
+        else:
+            node['left'] = self._split_tree(left)
+            self._split(node['left'], depth+1)
+        # process right child
+        if len(right) <= self.min_size:
+            node['right'] = self._to_terminal(right)
+        else:
+            node['right'] = self._split_tree(right)
+            self._split(node['right'], depth+1)
+    
+    def _to_terminal(self, group):
+        if self.func == 'gini':
+            return self._to_terminal_gini(group)
+        elif self.func == 'sse':
+            return self._to_terminal_regression(group)
+    
+    def _to_terminal_gini(self, group):
+        outcomes = [row[-1] for row in group]
+        return max(set(outcomes), key=outcomes.count)
+    
+    def _to_terminal_regression(self, group):
+        return sum(row[-1] for row in group)/len(group)
