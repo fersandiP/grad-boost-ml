@@ -39,14 +39,24 @@ def feature_engineering(data):
 
 def main():
 	# load data
-	feature_cols = ['admission_type_id', 'discharge_disposition_id', 'admission_source_id', 'diabetesMed']
+	temp = lambda col: col not in ['payer_code']
+	diabet = pd.read_csv('dataset/pre_processed.csv', usecols=temp)
+	feature_cols = []
+	for column in diabet:
+		if diabet[column].dtypes == 'int64':
+			feature_cols.append(column)
+		elif diabet[column].dtypes == 'float64':
+			feature_cols.append(column)
+	print(feature_cols)
+	# feature_cols = ['admission_type_id', 'discharge_disposition_id', 'admission_source_id', 'diabetesMed']
 	temp = lambda col: col in feature_cols
 	diabet = pd.read_csv('dataset/pre_processed.csv', usecols=temp)
 	array = diabet.values
 	length = len(feature_cols) - 1
 	X = array[:,0:length]
 	# feature extraction
-	pca = PCA(n_components=2)
+	# pca = PCA(n_components=2)
+	pca = PCA(n_components=15)
 	fit = pca.fit(X)
 	# summarize components
 	print("Explained Variance: %s" % fit.explained_variance_ratio_)
@@ -56,7 +66,8 @@ def main():
 	Y = array[:,length]
 	# feature extraction
 	model = LogisticRegression()
-	rfe = RFE(model, 2)
+	# rfe = RFE(model, 2)
+	rfe = RFE(model, 15)
 	fit = rfe.fit(X, Y)
 	print("Num Features: %d" % fit.n_features_)
 	print("Selected Features: %s" % fit.support_)
