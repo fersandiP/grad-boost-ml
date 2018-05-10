@@ -57,7 +57,7 @@ def main():
 	# temp.to_csv('dataset/pre_processed.csv', encoding='UTF8', index=False)
 
 	temp = lambda col: col not in ['payer_code']
-	df = pd.read_csv('dataset/pre_processed.csv', na_values='?', usecols=temp)
+	df = pd.read_csv('dataset/pre_processed.csv', usecols=temp)
 	y = df['diabetesMed'].map({'No' : 0, 'Yes' : 1})
 	# print(df)
 
