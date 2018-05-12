@@ -9,31 +9,24 @@ from sklearn.linear_model import LogisticRegression
 def feature_engineering(data):
     df = data.copy()
     def delete_column(del_col):
-        for col in del_col: df.drop(col, 1, inplace=True)
-            
+        for col in del_col: df.drop(col, 1, inplace=True)      
     #Delete id column and label              
     delete_column(['encounter_id', "patient_nbr", "diabetesMed"])
-    
     #Delete constant col
     df = df.loc[:, (df != df.iloc[0]).any()]
-    
     #Delete categorical column more than 2 values (simplicity)
     excluded_col = ['gender', 'race', 'age']
     obj_col = [col for col in df.columns if df.dtypes[col] == 'O' and 
                len(df[col].unique()) > 2 and col not in excluded_col]
     delete_column(obj_col)
-    
     #Convert age column to int range 0-9 (ordering)
     ages = df.age.unique()
     df['age'] = df['age'].map(dict((ages[i],i) for i in range(len(ages))))
-    
     #Convert all Object column to int using one hot encoding
     df = pd.get_dummies(df)
-    
     #Delete column with suffix No and id
     no_col = [col for col in df.columns if col.endswith("No") or col.endswith("id")]
     delete_column(no_col)
-    
     return df
 
 
